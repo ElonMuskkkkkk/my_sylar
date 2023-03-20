@@ -1,0 +1,4 @@
+/home/yxx/sylar/build/CMakeFiles/sylar.dir
+/home/yxx/sylar/build/CMakeFiles/log_test.dir
+/home/yxx/sylar/build/CMakeFiles/edit_cache.dir
+/home/yxx/sylar/build/CMakeFiles/rebuild_cache.dir
