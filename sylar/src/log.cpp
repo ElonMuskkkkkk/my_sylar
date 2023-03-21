@@ -1,5 +1,4 @@
 #include "../inc/log.h"
-#include <map>
 namespace sylar
 {
     const char *LogLevel::ToString(LogLevel::Level level)
@@ -26,16 +25,42 @@ namespace sylar
 
     LogEvent::LogEvent(std::shared_ptr<Logger> logger, LogLevel::Level level, const char *file,
                        int32_t line, uint32_t elapes, uint32_t thread_id,
-                       uint32_t fiber_id, time_t time)
+                       uint32_t fiber_id, time_t time, std::string threadName)
         : m_logger(logger),
           m_level(level),
-          m_log_file(file),
+          m_file(file),
           m_line(line),
           m_elapse(elapes),
           m_threadID(thread_id),
           m_fiberID(fiber_id),
-          m_time(time){}
+          m_time(time),
+          m_threadName(threadName) {}
 
+    void LogEvent::format(const char *fmt, ...)
+    {
+        va_list al;
+        va_start(al, fmt);
+        format(fmt, al);
+        va_end(al);
+    }
+
+    void LogEvent::format(const char *fmt, va_list al)
+    {
+        char *buf = nullptr;
+        int len = vasprintf(&buf, fmt, al);
+        if(len != -1){
+            m_ss << std::string(buf, len);
+            free(buf);
+        }
+    }
+
+    LogEventWrap::LogEventWrap(LogEvent::ptr event) : m_event(event){}
+    std::stringstream& LogEventWrap::getSS(){
+        return m_event->getSS();
+    }
+    LogEventWrap::~LogEventWrap(){
+        m_event->getLogger()->log(m_event->getLevel(), m_event);
+    }
     void Logger::addAppender(LogAppender::ptr appender)
     {
         if(!appender->getFormatter()){
@@ -53,6 +78,13 @@ namespace sylar
                 break;
             }
         }
+    }
+    void LogAppender::setFormatter(LogFormatter::ptr format){
+        m_formatter = format;
+        if(m_formatter)
+            m_hasFormatter = true;
+        else
+            m_hasFormatter = false;
     }
 
     Logger::Logger(const std::string &name):m_name(name),m_level(LogLevel::DEBUG)
@@ -96,13 +128,24 @@ namespace sylar
 
     void FileoutLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event)
     {
-
+        if(level >= m_level)
+        {
+            uint64_t now = event->getTime();
+            if(now >= m_lastTime + 3){
+                reopen();
+                m_lastTime = now;
+            }
+            if(!m_formatter->format(m_filestream,logger,level,event)){
+                std::cout << "error!" << std::endl;
+            }
+        }
     }
 
     void StdoutLogAppender::log(Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event)
     {
+        // std::cout << m_level << " " << level << std::endl;
         if (level >= m_level)
-            std::cout << m_formatter->format(logger, level, event);
+            std::cout << m_formatter->format(logger, level, event) << std::endl;
     }
 
     bool FileoutLogAppender::reopen()
@@ -125,6 +168,14 @@ namespace sylar
         }
         return ss.str();
     }
+    std::ostream& LogFormatter::format(std::ostream& ofs, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event)
+    {
+        for(auto& i : m_items){
+            i->format(ofs, logger, level, event);
+        }
+        return ofs;
+    }
+
     /**
      * @brief 多态，格式化日志内容
      */
@@ -206,7 +257,7 @@ namespace sylar
         ThreadNameFormatterItem(const std::string str = "") {}
         void format(std::ostream &os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override
         {
-            os << event->getThreadID();
+            os << event->getThreadName();
         }
     };
     /**
@@ -241,7 +292,7 @@ namespace sylar
         FileNameFormatterItem(const std::string str = "") {}
         void format(std::ostream &os, Logger::ptr logger, LogLevel::Level level, LogEvent::ptr event) override
         {
-            os << event->getLogFile();
+            os << event->getFile();
         }
     };
     /**
@@ -417,5 +468,23 @@ namespace sylar
             }
         }
     }
-    
+    LogManager::LogManager(){
+        m_root.reset(new Logger);
+        m_root->addAppender(LogAppender::ptr(new StdoutLogAppender));
+        m_loggers[m_root->getName()] = m_root;
+        init();
+    }
+    /**
+     * @brief 获取日志器，若没有，则注册一个
+    */
+    Logger::ptr LogManager::getLogger(const std::string& name)
+    {
+        auto it = m_loggers.find(name);
+        if(it != m_loggers.end()){
+            return it->second;
+        }
+        Logger::ptr logger(new Logger(name));
+        m_loggers[name] = logger;
+        return logger;
+    }
 }

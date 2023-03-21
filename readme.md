@@ -20,7 +20,7 @@ Logger类（日志器）<br>
 
 LogAppender<br>
 1.日志输出地，通过继承的方式实现日志输出方式的多态（标准输出流、文件输出）
-2.调用LogFormatter对象来进行具体的日志输出
+2.调用LogFormatter对象来进行具体的日志输出<br>
 
 LogFormatter<br>
 1、负责执行具体的写入操作：调用格式化函数format来输出日志内容<br>

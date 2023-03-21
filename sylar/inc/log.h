@@ -12,6 +12,8 @@
 #include <iostream>
 #include <vector>
 #include <functional>
+#include <stdarg.h>
+#include <map>
 
 namespace sylar {
     /**
@@ -58,11 +60,15 @@ namespace sylar {
 
         LogEvent(std::shared_ptr<Logger> logger, LogLevel::Level level, const char *file,
                  int32_t line, uint32_t elapes, uint32_t thread_id,
-                 uint32_t fiber_id, time_t time);
+                 uint32_t fiber_id, time_t time, std::string threadName = "master");
+        /**
+         * 获取日志等级
+        */
+        LogLevel::Level getLevel() const { return m_level; }
         /**
          * @brief 获取日志文件名称
          */
-        const char *getLogFile() const { return m_log_file; }
+        const char *getFile() const { return m_file; }
         /**
          * @brief 获取日志行号
         */
@@ -86,30 +92,73 @@ namespace sylar {
         /**
          * @brief 获取日志内容
         */
-        std::string getMessage() const {return m_content.str();}
+        std::string getMessage() const { return m_ss.str(); }
         /**
          * @brief 获取日志器
         */
         std::shared_ptr<Logger> getLogger() const { return m_logger; }
+        /**
+         * @brief 获取线程名称
+        */
+        std::string getThreadName() const { return m_threadName; }
+        /**
+         * @brief 获取日志流
+        */
+        std::stringstream &getSS() { return m_ss; }
+        /**
+         * @brief 格式化日志内容
+        */
+        void format(const char *fmt, ...);
+        void format(const char *fmt, va_list al);
 
     private:
         std::shared_ptr<Logger> m_logger; //日志器
         LogLevel::Level m_level;
-        const char *m_log_file = nullptr;
+        const char *m_file = nullptr;
         int32_t m_line = 0;         // 行号
         uint32_t m_elapse = 0;      //自服务器启动至今的事件
         uint32_t m_threadID = 0;    //线程号
         uint32_t m_fiberID = 0;     //协程号
         time_t m_time;              //时间戳
-        std::stringstream m_content;      //日志内容
+        // std::stringstream m_content;      //日志内容
         std::string m_threadName;   //线程名称
+        std::stringstream m_ss;
+    };
+
+    /**
+     *@brief 日志事件包装器 
+    */
+    class LogEventWrap
+    {
+    public:
+        /**
+         * @brief 构造函数
+         * @param[in] LogEvent::ptr
+        */
+        LogEventWrap(LogEvent::ptr event);
+        /**
+         * @brief 析构函数
+        */
+        ~LogEventWrap();
+        /**
+         * @brief 获取日志事件
+        */
+        LogEvent::ptr getLogEvent() const { return m_event; }
+        /**
+         * @brief 获取日志流内容
+        */
+        std::stringstream &getSS();
+
+    private:
+        LogEvent::ptr m_event;
     };
 
     /**
      * @brief 格式化日志
      * @brief init()函数：将日志内容格式化，%xxx, %xxx{xxx}, %%
-    */
-    class LogFormatter{
+     */
+    class LogFormatter
+    {
     public:
         typedef std::shared_ptr<LogFormatter> ptr;
     /**
@@ -134,7 +183,15 @@ namespace sylar {
         LogFormatter(const std::string &pattern);
         std::string format(std::shared_ptr<Logger> logger,LogLevel::Level level,LogEvent::ptr event);
         std::ostream &format(std::ostream &os, std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event);
+        bool isError() const { return m_error; }
+        /**
+         * @brief 初始化，解析日志格式
+        */
         void init();
+        /**
+         * @brief 获取日志格式
+        */
+        std::string getFormat() const { return m_pattern; }
 
     public:
         /**
@@ -166,14 +223,17 @@ namespace sylar {
     {
     public:
         typedef std::shared_ptr<LogAppender> ptr;
+        LogAppender() {}
+        LogAppender(LogLevel::Level level) : m_level(level){};
         virtual ~LogAppender() {}
         virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) = 0;
-        void setFormatter(LogFormatter::ptr val) { m_formatter = val; }
+        void setFormatter(LogFormatter::ptr val);
         LogFormatter::ptr getFormatter() const { return m_formatter; }
 
     protected:
-        LogLevel::Level m_level;
+        LogLevel::Level m_level = LogLevel::Level::DEBUG;
         LogFormatter::ptr m_formatter;
+        bool m_hasFormatter;
     };
 
 
@@ -223,6 +283,38 @@ namespace sylar {
     private:
         std::string m_filename;
         std::ofstream m_filestream;
+        uint64_t m_lastTime = 0;
+    };
+    /**
+     * 日志管理类 Manager
+    */
+    class LogManager
+    {
+    public:
+        /**
+         * @brief 构造函数
+        */
+        LogManager();
+        /**
+        * @brief 获取日志器，若没有，则注册一个
+        */
+        Logger::ptr getLogger(const std::string &name);
+        /**
+         * @brief 管理器初始化
+        */
+        void init() {};
+        
+        /**
+         * @brief 获取主日志器 
+        */
+        Logger::ptr getRootLogger() const { return m_root; }
+
+
+    private:
+        //日志器容器
+        std::map<std::string, Logger::ptr> m_loggers;
+        //主日志器
+        Logger::ptr m_root;
     };
 }
 
