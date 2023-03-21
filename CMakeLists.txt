@@ -8,7 +8,9 @@ set(CMAKE_CXX_FLAGS "$ENV{CXXFLAGS} -rdynamic -O0 -fPIC -ggdb -std=c++11 -Wall -
 set(CMAKE_C_FLAGS "$ENV{CXXFLAGS} -rdynamic -O0 -fPIC -ggdb -std=c11 -Wall -Wno-deprecated -Werror -Wno-unused-function -Wno-builtin-macro-redefined -Wno-deprecated-declarations")
 
 
-set(LIB_SRC ./sylar/src/log.cpp)
+set(LIB_SRC 
+    ./sylar/src/log.cpp
+    ./sylar/src/util.cpp)
 
 add_library(sylar SHARED ${LIB_SRC})
 add_executable(log_test ./tests/log_test.cpp)
