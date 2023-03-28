@@ -1,2 +1,2 @@
-2023-03-28 09:48:55	1005	master	2	[INFO]	[root]	/home/yxx/sylar/tests/log_test.cpp:13	macro test
-2023-03-28 09:48:55	1005	master	2	[ERROR]	[root]	/home/yxx/sylar/tests/log_test.cpp:14	test macro fmt aa
+2023-03-28 09:57:25	1411	master	2	[INFO]	[root]	/home/yxx/sylar/tests/log_test.cpp:13	macro test
+2023-03-28 09:57:25	1411	master	2	[ERROR]	[root]	/home/yxx/sylar/tests/log_test.cpp:14	test macro fmt aa
