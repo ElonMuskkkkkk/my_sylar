@@ -28,4 +28,8 @@ LogFormatter<br>
 3、format方法输出日志内容 ——> 具体方式为：遍历m_items中的项，调用项对应的接口()<br>
 4、当所有的items被遍历之后，则日志流完成，在LogAppender中输出<br>
 
+LogEventWrap<br>
+1.日志包装器，减少使用日志时的代码量
+2.采用RAII技术进行写入操作
+
 
