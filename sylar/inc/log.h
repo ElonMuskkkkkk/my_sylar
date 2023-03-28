@@ -19,7 +19,7 @@
 */
 #define SYLAR_LOG_LEVEL(logger,level)  \
     if(logger->getLevel() <= level)    \
-        sylar::LogEventWrap(sylar::LogEvent::ptr(new sylar::LogEvent ptr(logger,level,    \
+        sylar::LogEventWrap(sylar::LogEvent::ptr(new sylar::LogEvent(logger,level,    \
                             __FILE__,__LINE__,0,sylar::GetThreadID(),sylar::GetFiberID(), \
                             time(0)))).getSS()
 #define SYLAR_LOG_DEBUG(logger) SYLAR_LOG_LEVEL(logger,sylar::LogLevel::DEBUG)
@@ -38,19 +38,19 @@
 */
 #define SYLAR_LOG_FMT_LEVEL(logger,level,fmt,...) \
     if(logger->getLevel() <= level) \
-        sylar::LogEventWrap(sylar::LogEvent::ptr(new sylar::LogEvent ptr(logger,level,    \
+        sylar::LogEventWrap(sylar::LogEvent::ptr(new sylar::LogEvent(logger,level,    \
                             __FILE__,__LINE__,0,sylar::GetThreadID(),sylar::GetFiberID(), \
-                            time(0)))).getLogEvent()->format(fmt,__VA_ARGS__)
+                            time(0)))).getLogEvent()->format(fmt, __VA_ARGS__)
 
-#define SYLAR_LOG_FMT_DEBUG(logger,fmt,...) SYLAR_LOG_FMT_LEVEL(logger,sylar::LogLevel::DEBUG,fmt,...)
+#define SYLAR_LOG_FMT_DEBUG(logger,fmt,...) SYLAR_LOG_FMT_LEVEL(logger,sylar::LogLevel::DEBUG,fmt,__VA_ARGS__)
 
-#define SYLAR_LOG_FMT_INFO(logger,fmt,...) SYLAR_LOG_FMT_LEVEL(logger,sylar::LogLevel::INFO,fmt,...)
+#define SYLAR_LOG_FMT_INFO(logger,fmt,...) SYLAR_LOG_FMT_LEVEL(logger,sylar::LogLevel::INFO,fmt,__VA_ARGS__)
 
-#define SYLAR_LOG_FMT_WARN(logger,fmt,...) SYLAR_LOG_FMT_LEVEL(logger,sylar::LogLevel::WARN,fmt,...)
+#define SYLAR_LOG_FMT_WARN(logger,fmt,...) SYLAR_LOG_FMT_LEVEL(logger,sylar::LogLevel::WARN,fmt,__VA_ARGS__)
 
-#define SYLAR_LOG_FMT_FATAL(logger,fmt,...) SYLAR_LOG_FMT_LEVEL(logger,sylar::LogLevel::FATAL,fmt,...)
+#define SYLAR_LOG_FMT_FATAL(logger,fmt,...) SYLAR_LOG_FMT_LEVEL(logger,sylar::LogLevel::FATAL,fmt,__VA_ARGS__)
 
-#define SYLAR_LOG_FMT_ERROR(logger,fmt,...) SYLAR_LOG_FMT_LEVEL(logger,sylar::LogLevel::ERROR,fmt,...)
+#define SYLAR_LOG_FMT_ERROR(logger,fmt,...) SYLAR_LOG_FMT_LEVEL(logger,sylar::LogLevel::ERROR,fmt,__VA_ARGS__)
 
 /**
  * @brief 获取主日志器
