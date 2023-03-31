@@ -32,4 +32,20 @@ LogEventWrap<br>
 1.日志包装器，减少使用日志时的代码量
 2.采用RAII技术进行写入操作
 
+## 配置模块
+
+ConfigVarBase:配置信息的基类<br>
+$~~~~~$成员对象: name、description<br>
+$~~~~~$成员方法：获取name/description信息<br>
+$~~~~~~~~~~~~~~~~~~~~~$获取配置参数的类型描述<br>
+$~~~~~~~~~~~~~~~~~~~~~$为获取/载入配置信息的类型转换函数（virtual）<br>
+
+LexicalCast:类型转换模板<br>
+1、F->T: 将原类型转换成目标类型,封装的boost库的lexical_cast<T> 所有偏特化模板都调用该类型转换模板<br>，
+2、将YAML格式的string转换成指定的数据格式T，存储在容器中<br>
+3、将存储在容器中的各个项，转换成YAML格式的string返回<br>
+
+ConfigVar:保存配置参数的信息<br>
+
+
 
