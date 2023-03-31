@@ -15,6 +15,12 @@
 namespace sylar{
     pid_t GetThreadID();
     uint32_t GetFiberID();
+
+    template <typename T>
+    const char* TypeToName(){
+        static const char *s_name = abi::__cxa_demangle(typeid(T).name(), 0, 0, 0);
+        return s_name;
+    }
 }
 
 #endif
