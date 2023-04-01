@@ -11,6 +11,7 @@
 #include <sys/syscall.h>
 #include <sys/types.h>
 #include <stdint.h>
+#include <cxxabi.h>
 
 namespace sylar{
     pid_t GetThreadID();
