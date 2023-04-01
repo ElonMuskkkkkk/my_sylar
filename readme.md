@@ -34,7 +34,7 @@ LogEventWrap<br>
 
 ## 配置模块
 
-ConfigVarBase:配置信息的基类<br>
+ConfigVarBase:配置参数基类，记录配置参数项的名称和描述<br>
 $~~~~~$成员对象: name、description<br>
 $~~~~~$成员方法：获取name/description信息<br>
 $~~~~~~~~~~~~~~~~~~~~~$获取配置参数的类型描述<br>
@@ -45,7 +45,15 @@ LexicalCast:类型转换模板<br>
 2、将YAML格式的string转换成指定的数据格式T，存储在容器中<br>
 3、将存储在容器中的各个项，转换成YAML格式的string返回<br>
 
-ConfigVar:保存配置参数的信息<br>
+ConfigVar:配置参数项（参数名称，参数值，参数描述）<br>
+1、继承ConfigVarBase<br>
+2、提供了创建配置项的方法，同时提供获取、设置、转换配置项参数值的方法<br>
+3、每个配置项都有对应的回调函数
 
+Config:配置项的管理类<br>
+1、ConfigVarMap数据结构，记录所有的配置项<br>
+2、提供接口支持查找/创建配置项的方法<br>
+3、提供初始化配置项的接口<br>
+4、提供操作配置项回调函数的方法<br>
 
 

@@ -52,7 +52,7 @@ namespace sylar
         /**
          * @brief 转成字符串
          */
-        virtual std::string ToString() = 0;
+        virtual std::string toString() = 0;
         /**
          * @brief 从字符串初始化值
          */
@@ -452,7 +452,7 @@ namespace sylar
                     return tmp;
                 } else{
                     SYLAR_LOG_ERROR(SYLAR_LOG_ROOT()) << "Lookup name=" << name << " exists but type not " << TypeToName<T>() << " real_type=" << it->second->getTypeName()
-                                                      << " " << it->second->ToString();
+                                                      << " " << it->second->toString();
                     return nullptr;
                 }
             }
