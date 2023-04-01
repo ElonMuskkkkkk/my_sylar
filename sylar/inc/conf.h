@@ -16,6 +16,7 @@
 #include <exception>
 #include "log.h"
 #include "util.h"
+#include "cxxabi.h"
 
 namespace sylar
 {
@@ -127,7 +128,7 @@ namespace sylar
      * @brief 将模板类型偏特化（YAML STRING 转 std::list<T>)
      */
     template <typename T>
-    class LexicalCast<std::list<T>, std::string>
+    class LexicalCast<std::string,std::list<T>>
     {
     public:
         std::list<T> operator()(const std::string &v)
@@ -193,7 +194,7 @@ namespace sylar
     public:
         std::string operator()(const std::list<T> &v)
         {
-            YAML::Node node = YAML::Load(YAML::NodeType::Sequence);
+            YAML::Node node(YAML::NodeType::Sequence);
             for (auto &i : v)
             {
                 // 先将每一项转为string，放入node中，处理为YAML风格的数据
@@ -234,7 +235,7 @@ namespace sylar
     public:
         std::string operator()(std::unordered_set<T> &v)
         {
-            YAML::Node node = YAML::Load(YAML::NodeType::Sequence);
+            YAML::Node node(YAML::NodeType::Sequence);
             for (auto &i : v)
             {
                 node.push_back(LexicalCast<T, std::string>()(i));
@@ -275,7 +276,7 @@ namespace sylar
     public:
         std::string operator()(std::unordered_map<std::string, T> &v)
         {
-            YAML::Node node = YAML::Load(YAML::NodeType::Map);
+            YAML::Node node(YAML::NodeType::Map);
             for (auto &i : v)
             {
                 node[i.first] = YAML::Load(LexicalCast<T, std::string>()(i.second));
@@ -316,7 +317,7 @@ namespace sylar
          * @brief 将参数值转换成 YAML STRING
          * @exception 当转换失败时，抛出异常
         */
-        std::toString() override
+        std::string toString() override
         {
             try{
                 return ToStr()(m_val);
