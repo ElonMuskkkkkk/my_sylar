@@ -47,7 +47,7 @@ namespace sylar{
      *          N 同一个Tag创造多个实例索引
     */
     template <typename T, typename X = void, int N = 0>
-    class Singleton{
+    class SingletonPtr{
     public:
         /**
          * @brief 返回单例智能指针

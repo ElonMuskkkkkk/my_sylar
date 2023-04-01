@@ -356,7 +356,7 @@ namespace sylar {
         /**
          * @brief 获取主日志器 
         */
-        Logger::ptr getRootLogger() const { return m_root; }
+        Logger::ptr getRoot() const { return m_root; }
 
 
     private:
