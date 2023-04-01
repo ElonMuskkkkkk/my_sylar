@@ -7,6 +7,7 @@
 #include <memory>
 
 namespace sylar{
+    /*
     namespace{
         template <typename T, typename X, int N>
         T& GetInstance(){
@@ -20,6 +21,7 @@ namespace sylar{
             return v;
         }
     }
+    */
     /**
      * @brief 单例模式封装类
      * @details T 类型
