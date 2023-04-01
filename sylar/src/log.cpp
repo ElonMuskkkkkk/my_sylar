@@ -468,7 +468,7 @@ namespace sylar
             }
         }
     }
-    LogManager::LogManager(){
+    LoggerManager::LoggerManager(){
         m_root.reset(new Logger);
         m_root->addAppender(LogAppender::ptr(new StdoutLogAppender));
         m_loggers[m_root->getName()] = m_root;
@@ -477,7 +477,7 @@ namespace sylar
     /**
      * @brief 获取日志器，若没有，则注册一个
     */
-    Logger::ptr LogManager::getLogger(const std::string& name)
+    Logger::ptr LoggerManager::getLogger(const std::string& name)
     {
         auto it = m_loggers.find(name);
         if(it != m_loggers.end()){

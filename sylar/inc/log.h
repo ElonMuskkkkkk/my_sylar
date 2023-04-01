@@ -14,6 +14,8 @@
 #include <functional>
 #include <stdarg.h>
 #include <map>
+
+#include "singleton.h"
 /**
  * @brief 使用流方式将日志级别level的日志写入到logger中
 */
@@ -335,13 +337,13 @@ namespace sylar {
     /**
      * 日志管理类 Manager
     */
-    class LogManager
+    class LoggerManager
     {
     public:
         /**
          * @brief 构造函数
         */
-        LogManager();
+        LoggerManager();
         /**
         * @brief 获取日志器，若没有，则注册一个
         */
@@ -363,6 +365,11 @@ namespace sylar {
         //主日志器
         Logger::ptr m_root;
     };
+
+    /**
+     * @brief 单例模式日志器
+    */
+    typedef sylar::Singleton<LoggerManager> LoggerMgr;
 }
 
 #endif
