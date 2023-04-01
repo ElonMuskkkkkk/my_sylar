@@ -13,15 +13,21 @@ set(LIB_SRC
     ./sylar/src/conf.cpp
     ./sylar/src/util.cpp)
 
+
 add_library(sylar SHARED ${LIB_SRC})
+
+set(LIBS
+        sylar
+        yaml-cpp)
+
 
 add_executable(log_test ./tests/log_test.cpp)
 add_dependencies(log_test sylar)
-target_link_libraries(log_test sylar) 
+target_link_libraries(log_test ${LIBS}) 
 
-add_executable(log_config ./tests/log_config.cpp)
-add_dependencies(log_config sylar)
-target_link_libraries(log_config sylar) 
+add_executable(config_test ./tests/config_test.cpp)
+add_dependencies(config_test sylar)
+target_link_libraries(config_test ${LIBS}) 
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
