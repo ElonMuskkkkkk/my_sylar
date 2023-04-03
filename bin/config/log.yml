@@ -11,3 +11,15 @@ logs:
           - type: FileLogAppender
             file: /apps/logs/sylar/system.txt
           - type: StdoutLogAppender
+system:
+    port: 9090
+    value: 15
+    int_vec:
+      - 10
+      - 22
+    int_list: [19,2,11]
+    int_set: [12,12,13,44]
+    str_int_umap:
+        k1: 1
+        k2: 3
+        k3: 2

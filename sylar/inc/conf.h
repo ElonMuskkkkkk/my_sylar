@@ -10,6 +10,7 @@
 #include <vector>
 #include <list>
 #include <set>
+#include <map>
 #include <unordered_map>
 #include <unordered_set>
 #include <functional>
@@ -192,7 +193,7 @@ namespace sylar
     class LexicalCast<std::set<T>, std::string>
     {
     public:
-        std::string operator()(const std::list<T> &v)
+        std::string operator()(const std::set<T> &v)
         {
             YAML::Node node(YAML::NodeType::Sequence);
             for (auto &i : v)
@@ -252,7 +253,7 @@ namespace sylar
     class LexicalCast<std::string, std::unordered_map<std::string, T>>
     {
     public:
-        std::unordered_map<std::string, T> operator()(std::string &v)
+        std::unordered_map<std::string, T> operator()(const std::string &v)
         {
             YAML::Node node = YAML::Load(v);
             typename std::unordered_map<std::string, T> umap;
@@ -485,22 +486,23 @@ namespace sylar
         /**
          * @brief 使用YAML::Node 初始化配置模块
         */
-        static void LoadFromYaml(const YAML::Node &root){}
+        static void LoadFromYaml(const YAML::Node &root);
         /**
          * @brief 加载path文件夹里的配置文件
          */
-        static void LoadFromConfDir(const std::string &path, bool force = false){}
+        static void LoadFromConfDir(const std::string &path, bool force = false);
 
         /**
          * @brief 查找配置参数，返回配置参数的基类
          * @param[in] name 配置参数名称
         */
-        static ConfigVarBase::ptr LookupBase(const std::string &name) { return nullptr; }
+        static ConfigVarBase::ptr LookupBase(const std::string &name);
         /**
          * @brief 遍历配置模块里所有的配置项
          * @param[in] cb 配置项回调函数
-        */
-        static void Visit(std::function<void(ConfigVarBase::ptr)> cb) {}
+         */
+        static void Visit(std::function<void(ConfigVarBase::ptr)> cb);
+
     private:
         /**
          * @brief 返回所有的配置项

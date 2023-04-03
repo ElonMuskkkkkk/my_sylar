@@ -6,7 +6,9 @@ tests -- 测试
 
 ## 日志模块
 
+代码量：1000+<br>
 log4j风格
+
                
 基本数据对象<br>
    LogEvent(日志数据)
@@ -33,6 +35,8 @@ LogEventWrap<br>
 2.采用RAII技术进行写入操作
 
 ## 配置模块
+
+代码量：800左右
 
 ConfigVarBase:配置参数基类，记录配置参数项的名称和描述<br>
 $~~~~~$成员对象: name、description<br>
