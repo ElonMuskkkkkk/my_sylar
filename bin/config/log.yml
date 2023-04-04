@@ -23,3 +23,14 @@ system:
         k1: 1
         k2: 3
         k3: 2
+class:
+    person:
+      name: sylar
+      age: 12
+      sex: false
+    map:
+      sylar01:
+        name: sylar01
+        age: 18
+        sex: true
+
