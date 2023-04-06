@@ -1,0 +1,14 @@
+logs:
+    - name: root
+      level: info
+      formatter: "%d%T%m%n"
+      appenders:
+          - type: FileLogAppender
+            file: ../bin/logs/root.txt
+            formatter: "%d%T%m%n"
+    - name: system
+      level: info
+      appenders:
+          - type: FileLogAppender
+            file: ../bin/logs/system.txt
+            formatter: "%d%T%m%n"

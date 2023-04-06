@@ -85,6 +85,7 @@ namespace sylar {
          * @brief 将日志级别转换成字符串输出
         */
         static const char *ToString(LogLevel::Level level);
+        static LogLevel::Level FromString(const std::string& str);
     };
 
     /**
@@ -264,19 +265,23 @@ namespace sylar {
         std::vector<FormatterItem::ptr> m_items;
         bool m_error;
     };
-
+    
     /**
      * @brief 日志添加，worker
      */
     class LogAppender
     {
+        friend class Logger;
+
     public:
         typedef std::shared_ptr<LogAppender> ptr;
         LogAppender() {}
         LogAppender(LogLevel::Level level) : m_level(level){};
         virtual ~LogAppender() {}
         virtual void log(std::shared_ptr<Logger> logger, LogLevel::Level level, LogEvent::ptr event) = 0;
+        virtual std::string toYamlString() = 0;
         void setFormatter(LogFormatter::ptr val);
+        void setLevel(LogLevel::Level val) { m_level = val; }
         LogFormatter::ptr getFormatter() const { return m_formatter; }
 
     protected:
@@ -291,6 +296,8 @@ namespace sylar {
     */
     class Logger : public std::enable_shared_from_this<Logger>
     {
+        friend class LogManager;
+
     public:
         typedef std::shared_ptr<Logger> ptr;
         Logger(const std::string &name = "root");
@@ -304,10 +311,22 @@ namespace sylar {
 
         void addAppender(LogAppender::ptr ptr);
         void delAppender(LogAppender::ptr ptr);
+        /**
+         * @brief 清空日志目标
+         */
+        void clearAppenders();
         LogLevel::Level getLevel() const { return m_level; }
         void setLevel(LogLevel::Level val) { m_level = val; }
-
+        /**
+         * @brief 更改日志格式器
+         */
+        void setFormatter(LogFormatter::ptr val);
+        /**
+         * @brief 设置日志格式模板
+         */
+        void setFormatter(const std::string& val);
         std::string getName() const { return m_name; }
+        std::string toYamlString();
 
     private:
         std::string m_name;                     //日志名称
@@ -320,13 +339,14 @@ namespace sylar {
     public:
         typedef std::shared_ptr<StdoutLogAppender> ptr;
         virtual void log(Logger::ptr logger,LogLevel::Level level,LogEvent::ptr event) override;
-
+        virtual std::string toYamlString() override;
     };
     class FileoutLogAppender : public LogAppender{
     public:
         typedef std::shared_ptr<FileoutLogAppender> ptr;
         FileoutLogAppender(const std::string name);
         virtual void log(Logger::ptr logger,LogLevel::Level level,LogEvent::ptr event) override;
+        virtual std::string toYamlString() override;
         bool reopen();
 
     private:
@@ -358,6 +378,7 @@ namespace sylar {
         */
         Logger::ptr getRoot() const { return m_root; }
 
+        std::string toYamlString();
 
     private:
         //日志器容器

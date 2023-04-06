@@ -191,6 +191,23 @@ void test_class()
     XX_PM(g_person_map, before);
 }
 
+void test_log() {
+    static sylar::Logger::ptr system_log = SYLAR_LOG_NAME("system");
+    SYLAR_LOG_INFO(system_log) << "hello system" << std::endl;
+    std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
+    YAML::Node root = YAML::LoadFile("../bin/config/test.yml");
+    sylar::Config::LoadFromYaml(root);
+    std::cout << "=============" << std::endl;
+    std::cout << sylar::LoggerMgr::GetInstance()->toYamlString() << std::endl;
+    std::cout << "=============" << std::endl;
+    std::cout << root << std::endl;
+    SYLAR_LOG_INFO(system_log) << "hello system" << std::endl;
+
+    system_log->setFormatter("%d - %m%n");
+    SYLAR_LOG_INFO(system_log) << "hello system" << std::endl;
+}
+
+
 int main()
 {
     //SYLAR_LOG_INFO(SYLAR_LOG_ROOT()) << g_int_value_config->getName();
@@ -201,5 +218,6 @@ int main()
     //print_yaml(root, 0);
 
     //test_config();
-    test_class();
+    //test_class();
+    test_log();
 }
