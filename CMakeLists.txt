@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 3.22)
 
 project(sylar)
+include (cmake/utils.cmake)
 
 set(CMAKE_BUILD_TYPE "Debug")
 set(CMAKE_VERBOSE_MAKEFILE ON)
@@ -20,14 +21,11 @@ set(LIBS
         sylar
         yaml-cpp)
 
+force_redefine_file_macro_for_sources(sylar)
 
-add_executable(log_test ./tests/log_test.cpp)
-add_dependencies(log_test sylar)
-target_link_libraries(log_test ${LIBS}) 
+sylar_add_executable(log_test "./tests/log_test.cpp" sylar "${LIBS}")
+sylar_add_executable(config_test "./tests/config_test.cpp" sylar "${LIBS}")
 
-add_executable(config_test ./tests/config_test.cpp)
-add_dependencies(config_test sylar)
-target_link_libraries(config_test ${LIBS}) 
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
