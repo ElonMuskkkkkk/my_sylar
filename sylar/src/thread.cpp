@@ -35,6 +35,7 @@ namespace sylar
                                       << rt << " name = " << name;
             throw std::logic_error("pthread create error");
         }
+        m_semaphore.wait();  //确保线程启动
     }
     Thread::~Thread()
     {
@@ -65,6 +66,7 @@ namespace sylar
 
         std::function<void()> cb;
         cb.swap(thread->m_cb);
+        thread->m_semaphore.notify();
         cb();
         return 0;
     }

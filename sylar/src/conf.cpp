@@ -5,6 +5,7 @@ namespace sylar{
     static Logger::ptr g_logger = SYLAR_LOG_NAME("system");
     ConfigVarBase::ptr Config::LookupBase(const std::string& name)
     {
+        RWMutexType::ReadLock lock(GetMutex());
         auto it = GetDatas().find(name);
         return it == GetDatas().end() ? nullptr : it->second;
     }
@@ -56,8 +57,17 @@ namespace sylar{
     }
 
     static std::map<std::string, uint64_t> s_file2modifytime;
+    static sylar::Mutex s_mutex;
 
     void Config::LoadFromConfDir(const std::string& path,bool force){
         std::string absolute_path;
+    }
+    void Config::Visit(std::function<void(ConfigVarBase::ptr)> cb) {
+        RWMutexType::ReadLock lock(GetMutex());
+        ConfigVarMap& m = GetDatas();
+        for(auto it = m.begin();
+                it != m.end(); ++it) {
+            cb(it->second);
+        }
     }
 }

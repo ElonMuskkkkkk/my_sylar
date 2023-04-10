@@ -112,7 +112,7 @@ namespace sylar{
         void lock()
         {
             if(!m_locked){
-                m_locked.rdlock();
+                m_mutex.rdlock();
                 m_locked = true;
             }
         }

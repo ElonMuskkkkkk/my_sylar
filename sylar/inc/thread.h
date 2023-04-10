@@ -6,6 +6,7 @@
 #include <memory>
 #include <string>
 #include "noncopyable.h"
+#include "mutex.h"
 namespace sylar{
     class Thread : public NonCopyAble
     {
@@ -29,6 +30,7 @@ namespace sylar{
         pthread_t m_thread = 0;
         std::function<void()> m_cb;
         std::string m_name;
+        Semaphore m_semaphore;
     };
 }
 

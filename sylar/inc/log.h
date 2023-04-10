@@ -16,6 +16,8 @@
 #include <map>
 
 #include "singleton.h"
+#include "mutex.h"
+
 /**
  * @brief 使用流方式将日志级别level的日志写入到logger中
 */
@@ -275,6 +277,7 @@ namespace sylar {
 
     public:
         typedef std::shared_ptr<LogAppender> ptr;
+        typedef Spinlock MutexType;
         LogAppender() {}
         LogAppender(LogLevel::Level level) : m_level(level){};
         virtual ~LogAppender() {}
@@ -282,14 +285,18 @@ namespace sylar {
         virtual std::string toYamlString() = 0;
         void setFormatter(LogFormatter::ptr val);
         void setLevel(LogLevel::Level val) { m_level = val; }
-        LogFormatter::ptr getFormatter() const { return m_formatter; }
+        LogFormatter::ptr getFormatter() { 
+            MutexType::Lock lock(m_mutex);
+            return m_formatter; 
+        }
 
     protected:
         LogLevel::Level m_level = LogLevel::Level::DEBUG;
         LogFormatter::ptr m_formatter;
         bool m_hasFormatter;
-    };
 
+        MutexType m_mutex;
+    };
 
     /**
      * @brief 日志器,管理者的作用
@@ -300,6 +307,7 @@ namespace sylar {
 
     public:
         typedef std::shared_ptr<Logger> ptr;
+        typedef Spinlock MutexType;
         Logger(const std::string &name = "root");
         void log(LogLevel::Level level, LogEvent::ptr event);
 
@@ -333,6 +341,7 @@ namespace sylar {
         LogLevel::Level m_level;                //日志级别
         std::list<LogAppender::ptr> m_appenders; //日志输出地的集合
         LogFormatter::ptr m_formatter;
+        MutexType m_mutex;
     };
     class StdoutLogAppender : public LogAppender
     {
@@ -360,6 +369,7 @@ namespace sylar {
     class LoggerManager
     {
     public:
+        typedef Spinlock MutexType;
         /**
          * @brief 构造函数
         */
@@ -385,9 +395,10 @@ namespace sylar {
         std::map<std::string, Logger::ptr> m_loggers;
         //主日志器
         Logger::ptr m_root;
+        MutexType m_mutex;
     };
 
-    /**
+    /**std::cout << __FILE__ << " : " << __LINE__ << std::endl;
      * @brief 单例模式日志器
     */
     typedef sylar::Singleton<LoggerManager> LoggerMgr;

@@ -18,6 +18,9 @@
 #include "log.h"
 #include "util.h"
 #include "cxxabi.h"
+#include "thread.h"
+#include "mutex.h"
+
 
 namespace sylar
 {
@@ -301,6 +304,7 @@ namespace sylar
     {
     public:
         typedef std::shared_ptr<ConfigVar> ptr;
+        typedef RWMutex RWMutexType;
         typedef std::function<void(const T &old_value, const T &new_value)> on_change_cb;
 
         /**
@@ -321,6 +325,7 @@ namespace sylar
         std::string toString() override
         {
             try{
+                RWMutexType::ReadLock lock(m_mutex);
                 return ToStr()(m_val);
             }
             catch(std::exception& e){
@@ -352,6 +357,7 @@ namespace sylar
          * @brief 获取当前参数的值
         */
         const T getValue(){
+            RWMutexType::ReadLock lock(m_mutex);
             return m_val;
         }
 
@@ -362,12 +368,14 @@ namespace sylar
         void setValue(const T& v)
         {
             {
+                RWMutexType::ReadLock lock(m_mutex);
                 if(v == m_val)
                     return;
                 for(auto& i : m_cbs){
                     i.second(m_val, v);
                 }
             }
+            RWMutexType::WriteLock lock(m_mutex);
             m_val = v;
         }
         /**
@@ -380,6 +388,7 @@ namespace sylar
          * @return 返回该回调函数对应的唯一id，用于删除回调
         */
         uint64_t addListener(on_change_cb cb){
+            RWMutexType::WriteLock lock(m_mutex);
             static uint64_t s_fun_id = 0;
             ++s_fun_id;
             m_cbs[s_fun_id] = cb;
@@ -392,6 +401,7 @@ namespace sylar
         */
         void delListener(uint64_t key)
         {
+            RWMutexType::WriteLock lock(m_mutex);
             m_cbs.erase(key);
         }
 
@@ -411,12 +421,14 @@ namespace sylar
         */
         void cleanListener()
         {
+            RWMutexType::WriteLock lock(m_mutex);
             m_cbs.clear();
         }
 
     private:
         T m_val;
-        //变更回调函数数组，
+        RWMutexType m_mutex;
+        // 变更回调函数数组
         std::map<uint64_t, on_change_cb> m_cbs;
     };
 
@@ -428,7 +440,7 @@ namespace sylar
     {
     public:
         typedef std::unordered_map<std::string, ConfigVarBase::ptr> ConfigVarMap;
-
+        typedef RWMutex RWMutexType;
         /**
          * @brief 获取或创建对应参数名的配置参数
          * @param[in] name 配置参数名称
@@ -438,12 +450,13 @@ namespace sylar
          *              如果不存在，创建参数配置并用default_value赋值
          * @return      返回对应的参数配置信息，如果参数名存在但类型不匹配，则返回nullptr
          * @exception   如果参数名包含非法字符[^0-9a-z_.]，抛出异常
-        */
+         */
         template <typename T>
         static typename ConfigVar<T>::ptr Lookup(const std::string &name,
                                                  const T &default_value,
                                                  const std::string &description = "")
         {
+            RWMutexType::WriteLock lock(GetMutex());
             auto it = GetDatas().find(name);
             if(it != GetDatas().end())
             {
@@ -476,6 +489,7 @@ namespace sylar
         template <typename T>
         static typename ConfigVar<T>::ptr Lookup(const std::string& name)
         {
+            RWMutexType::ReadLock lock(GetMutex());
             auto it = GetDatas().find(name);
             if(it == GetDatas().end()){
                 return nullptr;
@@ -510,6 +524,13 @@ namespace sylar
         static ConfigVarMap& GetDatas(){
             static ConfigVarMap s_datas;
             return s_datas;
+        }
+        /**
+        * @brief 配置项的RWMutex
+        */
+        static RWMutexType& GetMutex() {
+            static RWMutexType s_mutex;
+            return s_mutex;
         }
     };
 }

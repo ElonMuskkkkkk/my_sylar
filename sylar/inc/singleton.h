@@ -5,6 +5,7 @@
 #define __SYLAR_SINGLETON_H_
 
 #include <memory>
+#include <iostream>
 
 namespace sylar{
     /*
@@ -35,6 +36,7 @@ namespace sylar{
          * @brief 返回单例裸指针
         */
         static T* GetInstance(){
+            // std::cout << "hello world" << std::endl;
             static T v;
             return &v;
         }
