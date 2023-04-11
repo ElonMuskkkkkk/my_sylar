@@ -31,6 +31,9 @@ sylar_add_executable(log_test "./tests/log_test.cpp" sylar "${LIBS}")
 sylar_add_executable(config_test "./tests/config_test.cpp" sylar "${LIBS}")
 sylar_add_executable(thread_test "./tests/thread_test.cpp" sylar "${LIBS}")
 sylar_add_executable(mutex_test "./tests/mutex_test.cpp" sylar "${LIBS}")
+sylar_add_executable(util_test "./tests/util_test.cpp" sylar "${LIBS}")
+
+
 
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/bin)
 set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/lib)
