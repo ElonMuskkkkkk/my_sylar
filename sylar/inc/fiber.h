@@ -85,6 +85,7 @@ namespace sylar{
         */
         State getState() const { return m_state; }
 
+
     public:
         /**
          * @brief 设置当前线程的运行协程

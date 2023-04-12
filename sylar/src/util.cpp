@@ -9,8 +9,7 @@ namespace sylar{
     }
     uint32_t GetFiberID()
     {
-        //待完善
-        return 2;
+        return sylar::Fiber::GetFiberID();
     }
     void Backtrace(std::vector<std::string> &bt, int size, int skip)
     {

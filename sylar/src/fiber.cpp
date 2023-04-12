@@ -2,6 +2,7 @@
 #include "../inc/log.h"
 #include "../inc/conf.h"
 #include "../inc/macro.h"
+#include "../inc/scheduler.h"
 #include <atomic>
 
 namespace sylar {
@@ -10,7 +11,7 @@ namespace sylar {
     static std::atomic<uint64_t> s_fiber_id{0};
     static std::atomic<uint64_t> s_fiber_count{0};
     
-    static thread_local Fiber *t_fiber = nullptr;
+    static thread_local Fiber *t_fiber = nullptr;  //正在执行的协程
     static thread_local Fiber::ptr t_threadFiber = nullptr;
 
     //启动时注册配置项
@@ -75,7 +76,27 @@ namespace sylar {
     */
     Fiber::~Fiber()
     {
-        
+        --s_fiber_count;
+        if(m_stack){
+            //子协程析构流程
+            //只有处于终止、异常、初始化三种状态的协程可以被析构
+            SYLAR_ASSERT(m_state == TERM ||
+                         m_state == EXCEPT ||
+                         m_state == INIT);
+            StackAllocator::Dealloc(m_stack, m_stacksize);
+        }
+        else{
+            //主协程的析构流程，先确认是主协程（没有回调函数，始终处于EXEC状态）
+            SYLAR_ASSERT(!m_cb);
+            SYLAR_ASSERT(m_state == EXEC);
+
+            Fiber *cur = t_fiber;
+            if(cur == this){
+                SetThis(nullptr);
+            }
+        }
+        SYLAR_LOG_DEBUG(g_logger) << "Fiber::~Fiber id=" << m_id
+                              << " total=" << s_fiber_count;
     }
 
     /**
@@ -85,7 +106,19 @@ namespace sylar {
     */
     void Fiber::reset(std::function<void()> cb)
     {
+        SYLAR_ASSERT(m_stack); //确定当前协程为子协程
+        SYLAR_ASSERT(m_state == TERM || m_state == INIT || m_state == EXCEPT);
+        m_cb = cb;
+        if(getcontext(&m_ctx)){
+            SYLAR_ASSERT2(false, "getcontext");
+        }
 
+        m_ctx.uc_link = nullptr;
+        m_ctx.uc_stack.ss_size = m_stacksize;
+        m_ctx.uc_stack.ss_sp = m_stack;
+
+        makecontext(&m_ctx, &Fiber::MainFunc, 0);
+        m_state = INIT;
     }
 
     /**
@@ -95,7 +128,13 @@ namespace sylar {
     */
     void Fiber::swapIn()
     {
-
+        SetThis(this);
+        SYLAR_ASSERT(m_state != EXEC);
+        m_state = EXEC;
+        if(swapcontext(&Scheduler::GetMainFiber()->m_ctx,&m_ctx))
+        {
+            SYLAR_ASSERT2(false, "swapcontext");
+        }
     }
 
     /**
@@ -103,7 +142,10 @@ namespace sylar {
     */
     void Fiber::swapOut()
     {
-
+        SetThis(Scheduler::GetMainFiber());
+        if(swapcontext(&m_ctx, &Scheduler::GetMainFiber()->m_ctx)) {
+            SYLAR_ASSERT2(false, "swapcontext");
+        }
     }
     /**
      * @brief 将当前线程切换为执行状态
@@ -111,7 +153,11 @@ namespace sylar {
     */
     void Fiber::call()
     {
-
+        SetThis(this);
+        m_state = EXEC;
+        if(swapcontext(&t_threadFiber->m_ctx,&m_ctx)){
+            SYLAR_ASSERT2(false, "swapcontext");
+        }
     }
     /**
      * @brief 当前线程切换到后台
@@ -120,7 +166,10 @@ namespace sylar {
     */
     void Fiber::back()
     {
-
+        SetThis(t_threadFiber.get());
+        if(swapcontext(&m_ctx,&t_threadFiber->m_ctx)){
+            SYLAR_ASSERT2(false, "swapcontext");
+        }
     }
 
     /**
@@ -129,7 +178,7 @@ namespace sylar {
     */
     void Fiber::SetThis(Fiber *f)
     {
-
+        t_fiber = f;
     }
 
     /**
@@ -137,7 +186,15 @@ namespace sylar {
     */
     Fiber::ptr Fiber::GetThis()
     {
-
+        //t_fiber 指向的是当前正在执行的协程，若存在，则返回
+        if(t_fiber){
+            return t_fiber->shared_from_this();
+        }
+        //否则，创建主协程
+        Fiber::ptr main_fiber(new Fiber);
+        SYLAR_ASSERT(t_fiber == main_fiber.get());
+        t_threadFiber = main_fiber;
+        return t_fiber->shared_from_this();
     }
     /**
      * @brief 当前协程切换到后台，并设置为Ready状态
@@ -145,7 +202,10 @@ namespace sylar {
     */
     void Fiber::YieldToReady()
     {
-
+        Fiber::ptr cur = GetThis();
+        SYLAR_ASSERT(cur->m_state == EXEC);
+        cur->m_state = READY;
+        cur->swapOut();
     }
     /**
      * @brief 当前协程切换到后台，并设置为hold状态
@@ -153,14 +213,17 @@ namespace sylar {
     */
     void Fiber::YieldToHold()
     {
-
+        Fiber::ptr cur = GetThis();
+        SYLAR_ASSERT(cur->m_state == EXEC);
+        cur->m_state = HOLD;
+        cur->swapOut();
     }
     /**
      * @brief 返回当前协程的总数量
     */
     uint64_t Fiber::TotalFibers()
     {
-
+        return s_fiber_count;
     }
     /**
      * @brief 协程执行函数
@@ -168,7 +231,31 @@ namespace sylar {
     */
     void Fiber::MainFunc()
     {
+        Fiber::ptr cur = GetThis(); 
+        SYLAR_ASSERT(cur);  //确定当前协程非空
+        try{
+            cur->m_cb();
+            cur->m_cb = nullptr;
+            cur->m_state = TERM;
+        } catch(std::exception& ex) {
+            cur->m_state = EXCEPT;
+            SYLAR_LOG_ERROR(g_logger) << "Fiber Except: " << ex.what()
+                << " fiber_id=" << cur->getId()
+                << std::endl
+                << sylar::BacktraceToString();
+        } catch (...){
+            cur->m_state = EXCEPT;
+            SYLAR_LOG_ERROR(g_logger) << "Fiber Except"
+                << " fiber_id=" << cur->getId()
+                << std::endl
+                << sylar::BacktraceToString();
+        }
+        auto raw_ptr = cur.get();
+        cur.reset();
+        raw_ptr->swapOut();
 
+        SYLAR_ASSERT2(false, "never reach fiber_id=" + std::to_string(raw_ptr->getId()));
+        
     }
     /**
      * @brief 协程执行函数
@@ -176,14 +263,39 @@ namespace sylar {
     */
     void Fiber::CallerMainFunc()
     {
+        Fiber::ptr cur = GetThis();
+        SYLAR_ASSERT(cur);
+        try {
+            cur->m_cb();
+            cur->m_cb = nullptr;
+            cur->m_state = TERM;
+        } catch (std::exception& ex) {
+            cur->m_state = EXCEPT;
+            SYLAR_LOG_ERROR(g_logger) << "Fiber Except: " << ex.what()
+                << " fiber_id=" << cur->getId()
+                << std::endl
+                << sylar::BacktraceToString();
+        } catch (...) {
+            cur->m_state = EXCEPT;
+            SYLAR_LOG_ERROR(g_logger) << "Fiber Except"
+                << " fiber_id=" << cur->getId()
+                << std::endl
+                << sylar::BacktraceToString();
+        }
 
+        auto raw_ptr = cur.get();
+        cur.reset();
+        raw_ptr->back();
+        SYLAR_ASSERT2(false, "never reach fiber_id=" + std::to_string(raw_ptr->getId()));
     }
     /**
      * @brief 获取当前协程的id
     */
     uint64_t Fiber::GetFiberID()
     {
-        
+        if(t_fiber){
+            return t_fiber->getId();
+        }
+        return 0;
     }
-
 }

@@ -15,6 +15,7 @@
 #include <vector>
 #include <string>
 #include <execinfo.h>
+#include "fiber.h"
 
 namespace sylar{
     pid_t GetThreadID();
