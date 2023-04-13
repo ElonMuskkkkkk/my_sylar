@@ -117,12 +117,110 @@ namespace sylar{
     {
         SYLAR_LOG_DEBUG(g_logger) << m_name << " run";
         // set_hook_enable(true);
-        setThis();
+        setThis(); //设置调度器调度的是当前线程
         //当前线程不是caller线程的话,创建一个主协程
         if(sylar::GetThreadID() != m_rootThread){
             t_scheduler_fiber = Fiber::GetThis().get();
         }
+        //创建一个空置线程
         Fiber::ptr idle_fiber(new Fiber(std::bind(&Scheduler::idle, this)));
+        
         Fiber::ptr cb_fiber;
+        //创建一个待添加元素
+        FiberAndThread ft;
+
+        while(true){
+            ft.reset();
+            bool tickle_me = false;
+            bool is_active = false;
+            {
+                MutexType::Lock lock(m_mutex);
+                auto it = m_fibers.begin();
+                //找到一个可调度的协程
+                while(it != m_fibers.end())
+                {
+                    if(it->thread != -1 && it->thread != sylar::GetThreadID()){
+                        it++;
+                        tickle_me = true;
+                        continue;
+                    }
+                    SYLAR_ASSERT(it->fiber || it->cb);
+                    if(it->fiber && it->fiber->getState() == sylar::Fiber::EXEC){
+                        it++;
+                        continue;
+                    }
+                    ft = *it;
+                    m_fibers.erase(it++);
+                    ++m_activeThreadCount;
+                    is_active = true;
+                    break;
+                }
+                //如果迭代器不等于end,证明取出了合适的ft
+                tickle_me |= it != m_fibers.end();
+                // 通知调度器？？？
+                if(tickle_me){
+                    tickle();
+                }
+                //第一种情况：注册的是协程，确保切成状态不是终止或异常，启动协程
+                if(ft.fiber && (ft.fiber->getState() != Fiber::TERM
+                                && ft.fiber->getState() != Fiber::EXCEPT))
+                {
+                    ft.fiber->swapIn(); //执行该协程
+                    --m_activeThreadCount;
+                    //协程执行结束后，根据协程状态，选择放入调度队列，或者结束执行
+                    if(ft.fiber->getState() == Fiber::READY){
+                        schedule(ft.fiber);
+                    }
+                    else if(ft.fiber->getState() != Fiber::TERM
+                        && ft.fiber->getState() != Fiber::EXCEPT){
+                        ft.fiber->m_state = Fiber::HOLD;    
+                        schedule(ft.fiber);
+                    }
+                    ft.reset();
+                }
+                else if(ft.cb){
+                    if(cb_fiber){
+                        cb_fiber->reset(ft.cb);
+                    }else{
+                        cb_fiber.reset(new Fiber(ft.cb));
+                    }
+                    ft.reset();
+                    cb_fiber->swapIn(); // 调度当前协程
+                    --m_activeThreadCount;
+                    if(ft.fiber->getState() == Fiber::READY){
+                        schedule(cb_fiber);
+                        cb_fiber.reset();
+                    }
+                    else if (ft.fiber->getState() != Fiber::TERM && ft.fiber->getState() != Fiber::EXCEPT)
+                    {
+                        cb_fiber->reset(nullptr);
+                    }
+                    else{
+                        cb_fiber->m_state = Fiber::HOLD;
+                        //schedule(cb_fiber); // 自行添加的代码
+                        cb_fiber.reset();
+                    }
+                }
+                else{
+                    //未获取到可调度协程
+                    if(is_active){
+                        --m_activeThreadCount;
+                        continue;
+                    }
+                    if(idle_fiber->getState() == Fiber::TERM){
+                        SYLAR_LOG_INFO(g_logger) << "idle fiber term";
+                        break;
+                    }
+                    ++m_idleThreadCount;
+                    idle_fiber->swapIn();
+                    --m_idleThreadCount;
+                    if(idle_fiber->getState() != Fiber::TERM
+                            && idle_fiber->getState() != Fiber::EXCEPT) 
+                    {
+                        idle_fiber->m_state = Fiber::HOLD;
+                    }
+                }
+            }
+        }
     }
 }
