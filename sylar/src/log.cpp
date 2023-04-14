@@ -172,9 +172,13 @@ namespace sylar
         {
             //std::cout << __FILE__ << " : " << __LINE__ << std::endl;
             MutexType::Lock lock(m_mutex);
-            for (auto &i : m_appenders)
-            {
-                i->log(self, level, event);
+            if(!m_appenders.empty()){
+                for (auto &i : m_appenders)
+                {
+                    i->log(self, level, event);
+                }
+            }else if(m_root){
+                m_root->log(level, event);
             }
         }
     }
@@ -609,6 +613,7 @@ namespace sylar
             return it->second;
         }
         Logger::ptr logger(new Logger(name));
+        logger->m_root = m_root;
         m_loggers[name] = logger;
         return logger;
     }

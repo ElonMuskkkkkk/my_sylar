@@ -303,7 +303,7 @@ namespace sylar {
     */
     class Logger : public std::enable_shared_from_this<Logger>
     {
-        friend class LogManager;
+        friend class LoggerManager;
 
     public:
         typedef std::shared_ptr<Logger> ptr;
@@ -342,6 +342,7 @@ namespace sylar {
         std::list<LogAppender::ptr> m_appenders; //日志输出地的集合
         LogFormatter::ptr m_formatter;
         MutexType m_mutex;
+        Logger::ptr m_root;
     };
     class StdoutLogAppender : public LogAppender
     {

@@ -152,7 +152,7 @@ namespace sylar{
         template<class FiberOrCb>
         bool schedulerNoLock(FiberOrCb fc,int thread){
             bool need_tickle = m_fibers.empty();
-            FiberOrCb(fc, thread);
+            FiberAndThread ft(fc, thread);
             if(ft.fiber || ft.cb){
                 m_fibers.push_back(ft);
             }

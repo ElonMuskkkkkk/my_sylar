@@ -48,7 +48,7 @@ namespace sylar {
      * @param[in] stacksize 协程栈大小
      * @param[in] use_caller 是否在MainFiber上调度
     */
-    Fiber::Fiber(std::function<void()> cb, size_t stacksize = 0, bool use_caller = false)
+    Fiber::Fiber(std::function<void()> cb, size_t stacksize, bool use_caller)
     : m_id(++s_fiber_id),
       m_cb(cb)
     {
@@ -148,8 +148,8 @@ namespace sylar {
         }
     }
     /**
-     * @brief 将当前线程切换为执行状态
-     * @pre 执行的为当前线程的主协程
+     * @brief 执行当前协程
+     * @post 将当前的上下文保存到主协程的m_ctx中，执行当前的协程
     */
     void Fiber::call()
     {
