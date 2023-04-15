@@ -16,7 +16,8 @@ set(LIB_SRC
     ./sylar/src/thread.cpp
     ./sylar/src/mutex.cpp
     ./sylar/src/fiber.cpp
-    ./sylar/src/scheduler.cpp)
+    ./sylar/src/scheduler.cpp
+    ./sylar/src/io_manager.cpp)
 
 
 
@@ -35,6 +36,7 @@ sylar_add_executable(thread_test "./tests/thread_test.cpp" sylar "${LIBS}")
 sylar_add_executable(mutex_test "./tests/mutex_test.cpp" sylar "${LIBS}")
 sylar_add_executable(util_test "./tests/util_test.cpp" sylar "${LIBS}")
 sylar_add_executable(scheduler_test "./tests/scheduler_test.cpp" sylar "${LIBS}")
+sylar_add_executable(io_test "./tests/io_test.cpp" sylar "${LIBS}")
 
 
 

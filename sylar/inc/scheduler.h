@@ -86,7 +86,7 @@ namespace sylar{
         /**
          * @brief 通知协程调度器有任务了
         */
-        void tickle();
+        virtual void tickle();
         /**
          * @brief 协程调度函数
         */

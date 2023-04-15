@@ -9,5 +9,7 @@
 #include "macro.h"
 #include "fiber.h"
 #include "scheduler.h"
+#include "io_manager.h"
+#include <sys/epoll.h>
 
 #endif
