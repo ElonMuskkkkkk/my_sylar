@@ -117,5 +117,14 @@ Scheduler(调度器，基类)<br>
 ## IO协程调度模块
 1.IOManager继承自协程调度器Scheduler,可以在多个线程中对IO调度进行管理<br>
 2.idle方法重写，负责执行epoll_wait，即，无IO事件时，监听IO到来<br>
-3.组织事件
+3.IO协程调度的策略是：有待执行任务时，优先执行待执行任务，减少IO等待<br>
+4.调度的基本单位：协程（继承）、socket事件上下文（特有）<br>
+5.基本流程：<br>
+&emsp;&emsp：通过addEvent，向IO调度器的Fd_Contexts添加socket事件上下文<br>
+&emsp;&emsp：通过唤醒idle协程，将获取到的IO就绪事件进行包装，将对应事件的具体执行放到协程组中<br>
+
+
+
+
+
 

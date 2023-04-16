@@ -5,7 +5,7 @@
 namespace sylar{
     static sylar::Logger::ptr g_logger = SYLAR_LOG_NAME("system");
     
-    IOManager::FdContext::EventContext IOManager::FdContext::getContext(Event event)
+    IOManager::FdContext::EventContext& IOManager::FdContext::getContext(Event event)
     {
         switch(event) {
         case IOManager::READ:
@@ -108,7 +108,7 @@ namespace sylar{
         //成功注册epoll事件后，刷新队列中对应的元素
         ++m_pendingEventCount;
         fd_ctx->events = (Event)(fd_ctx->events | event); //修改数组结构上的元素
-        FdContext::EventContext event_ctx = fd_ctx->getContext(event);//获取对应的事件上下文
+        FdContext::EventContext& event_ctx = fd_ctx->getContext(event);//获取对应的事件上下文
         SYLAR_ASSERT(!event_ctx.scd && !event_ctx.fiber && !event_ctx.cb);//确保为空
         event_ctx.scd = Scheduler::GetThis();
 
@@ -250,10 +250,12 @@ namespace sylar{
     
     void IOManager::tickle()
     {
-        if(hasIdleThreads()){
+        if (!hasIdleThreads())
+        {
             return;
         }
         int rt = write(m_tickleFds[1], "T", 1);
+        //std::cout << "**********" << std::endl;
         SYLAR_ASSERT(rt == 1);
     }
 

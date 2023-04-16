@@ -40,15 +40,15 @@ namespace sylar{
             typedef Mutex MutexType;
             struct EventContext
             {
-                Scheduler *scd;
-                Fiber::ptr fiber;
-                std::function<void()> cb;
+                Scheduler *scd = nullptr;
+                Fiber::ptr fiber = nullptr;
+                std::function<void()> cb = nullptr;
             };
             /**
              * @brief 获取对应的事件上下文类
              * @param[in] event 事件类型
             */
-            EventContext getContext(Event event);
+            EventContext& getContext(Event event);
             /**
              * @brief 重置事件上下文
              * @param[in, out] ctx 待重置的上下文
