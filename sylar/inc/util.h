@@ -15,6 +15,7 @@
 #include <vector>
 #include <string>
 #include <execinfo.h>
+#include <sys/time.h>
 #include "fiber.h"
 
 namespace sylar{
@@ -41,6 +42,9 @@ namespace sylar{
         static const char *s_name = abi::__cxa_demangle(typeid(T).name(), 0, 0, 0);
         return s_name;
     }
+
+    //获取 ms
+    uint64_t GetCurrentMS();
 }
 
 #endif

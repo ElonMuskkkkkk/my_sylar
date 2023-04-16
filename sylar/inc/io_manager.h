@@ -2,14 +2,14 @@
 #define __SYLAR_IOMANAGER_H_
 
 #include "scheduler.h"
-
+#include "timer.h"
 
 namespace sylar{
 
     /**
      * @brief 基于epoll的IO调度协程
     */
-    class IOManager : public Scheduler
+    class IOManager : public Scheduler, public TimerManager
     {
     public:
         typedef std::shared_ptr<IOManager> ptr;
@@ -118,11 +118,14 @@ namespace sylar{
          * @brief 返回当前的IOManager
          */
         static IOManager* GetThis();
+
+        bool stopping(uint64_t &timeout);
+
     protected:
         void tickle() override;
         void idle() override;
         bool stopping() override;
-        //void onTimerInsertedAtFront() override;
+        void onTimerInsertedAtFront() override;
 
         /**
          * @brief 重置socket句柄上下文的容器大小

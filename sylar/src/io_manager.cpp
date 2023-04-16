@@ -268,7 +268,8 @@ namespace sylar{
             delete[] ptr;
         });
         while(true){
-            if(SYLAR_UNLIKELY(stopping())){
+            uint64_t next_timeout = 0;
+            if(SYLAR_UNLIKELY(stopping(next_timeout))){
                 SYLAR_LOG_INFO(g_logger) << "name=" << getName()
                                      << " idle stopping exit";
                 break;
@@ -277,19 +278,25 @@ namespace sylar{
             int rt = 0;
             do{
                 static const int MAX_TIMEOUT = 3000;
-                rt = epoll_wait(m_efd, events, MAX_EVENTS, MAX_TIMEOUT);
+                if(next_timeout != ~0ull) {
+                    next_timeout = (int)next_timeout > MAX_TIMEOUT
+                                    ? MAX_TIMEOUT : next_timeout;
+                } else {
+                    next_timeout = MAX_TIMEOUT;
+                }
+                rt = epoll_wait(m_efd, events, MAX_EVENTS, (int)next_timeout);
                 if(rt < 0 && errno == EINTR) {
                 } else {
                     break;
                 }
             } while (true);
-            // std::vector<std::function<void()> > cbs;
-            // listExpiredCb(cbs);
-            // if(!cbs.empty()) {
-            //     //SYLAR_LOG_DEBUG(g_logger) << "on timer cbs.size=" << cbs.size();
-            //     schedule(cbs.begin(), cbs.end());
-            //     cbs.clear();
-            // }
+            std::vector<std::function<void()> > cbs;
+            listExpiredCb(cbs);
+            if(!cbs.empty()) {
+                //SYLAR_LOG_DEBUG(g_logger) << "on timer cbs.size=" << cbs.size();
+                schedule(cbs.begin(), cbs.end());
+                cbs.clear();
+            }
 
             // //if(SYLAR_UNLIKELY(rt == MAX_EVNETS)) {
             // //    SYLAR_LOG_INFO(g_logger) << "epoll wait events=" << rt;
@@ -356,9 +363,20 @@ namespace sylar{
         }
     }
 
-    bool IOManager::stopping()
-    {
-        return Scheduler::stopping() && m_pendingEventCount == 0;
+    bool IOManager::stopping(uint64_t& timeout){
+        timeout = getNextTimer();
+        return timeout == ~0ull
+            && m_pendingEventCount == 0
+            && Scheduler::stopping();
     }
 
+    bool IOManager::stopping()
+    {
+        uint64_t timeout = 0;
+        return stopping(timeout);
+    }
+
+    void IOManager::onTimerInsertedAtFront(){
+        tickle();
+    }
 }

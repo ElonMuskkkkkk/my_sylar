@@ -16,6 +16,7 @@ set(LIB_SRC
     ./sylar/src/thread.cpp
     ./sylar/src/mutex.cpp
     ./sylar/src/fiber.cpp
+    ./sylar/src/timer.cpp
     ./sylar/src/scheduler.cpp
     ./sylar/src/io_manager.cpp)
 

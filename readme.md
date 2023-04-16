@@ -123,6 +123,9 @@ Scheduler(调度器，基类)<br>
 &emsp;&emsp：通过addEvent，向IO调度器的Fd_Contexts添加socket事件上下文<br>
 &emsp;&emsp：通过唤醒idle协程，将获取到的IO就绪事件进行包装，将对应事件的具体执行放到协程组中<br>
 
+## IO定时器模块
+1.Timer的基本方法：addTimer、cancelTimer<br>
+2.Timer 需要能够获取当前定时器距离触发时间的时间差
 
 
 
