@@ -1,6 +1,7 @@
 #include "../inc/scheduler.h"
 #include "../inc/log.h"
 #include "../inc/macro.h"
+#include "../inc/hook.h"
 
 
 namespace sylar{
@@ -133,8 +134,9 @@ namespace sylar{
         Fiber::ptr cb_fiber;
         //创建一个待添加元素
         FiberAndThread ft;
-
-        while(true){
+        set_hook_enable(true);
+        while (true)
+        {
             ft.reset();
             bool tickle_me = false;
             bool is_active = false;

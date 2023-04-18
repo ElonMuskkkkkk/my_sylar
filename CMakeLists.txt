@@ -10,6 +10,7 @@ set(CMAKE_C_FLAGS "$ENV{CFLAGS} -rdynamic -O0 -fPIC -g -std=c11 -Wall -Wno-depre
 
 
 set(LIB_SRC 
+    ./sylar/src/hook.cpp
     ./sylar/src/log.cpp
     ./sylar/src/conf.cpp
     ./sylar/src/util.cpp
@@ -38,6 +39,7 @@ sylar_add_executable(mutex_test "./tests/mutex_test.cpp" sylar "${LIBS}")
 sylar_add_executable(util_test "./tests/util_test.cpp" sylar "${LIBS}")
 sylar_add_executable(scheduler_test "./tests/scheduler_test.cpp" sylar "${LIBS}")
 sylar_add_executable(io_test "./tests/io_test.cpp" sylar "${LIBS}")
+sylar_add_executable(hook_test "./tests/hook_test.cpp" sylar "${LIBS}")
 
 
 

@@ -126,8 +126,8 @@ Scheduler(调度器，基类)<br>
 ## IO定时器模块
 1.Timer的基本方法：addTimer、cancelTimer<br>
 2.Timer 需要能够获取当前定时器距离触发时间的时间差
-
-
+3.工作流程：
+&emsp;&emsp：添加定时器模块，定时器在idle协程中发挥作用
 
 
 
