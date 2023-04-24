@@ -17,6 +17,7 @@
 #include <execinfo.h>
 #include <sys/time.h>
 #include "fiber.h"
+#include <stdint.h>
 
 namespace sylar{
     pid_t GetThreadID();

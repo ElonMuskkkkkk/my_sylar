@@ -19,7 +19,9 @@ set(LIB_SRC
     ./sylar/src/fiber.cpp
     ./sylar/src/timer.cpp
     ./sylar/src/scheduler.cpp
-    ./sylar/src/io_manager.cpp)
+    ./sylar/src/io_manager.cpp
+    ./sylar/src/fd_manager.cpp
+    ./sylar/src/hook.cpp)
 
 
 

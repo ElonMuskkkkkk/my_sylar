@@ -124,10 +124,14 @@ Scheduler(调度器，基类)<br>
 &emsp;&emsp：通过唤醒idle协程，将获取到的IO就绪事件进行包装，将对应事件的具体执行放到协程组中<br>
 
 ## IO定时器模块
-1.Timer的基本方法：addTimer、cancelTimer<br>
-2.Timer 需要能够获取当前定时器距离触发时间的时间差
-3.工作流程：
+1. Timer的基本方法：addTimer、cancelTimer<br>
+2. Timer 需要能够获取当前定时器距离触发时间的时间差
+3. 工作流程：
 &emsp;&emsp：添加定时器模块，定时器在idle协程中发挥作用
+
+## HOOK模块
+1. 自定义与系统api相同接口的函数，优先使用该用户级函数
+2. sylar的hook模块是线程级的，颗粒度比较细
 
 
 
